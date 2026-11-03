@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wrong Answer Log — for nursing students</title>
+<meta name="description" content="Offline wrong-answer log for nursing students. Education only — not medical advice.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9D%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #fbf7f1;
+    --surface: #ffffff;
+    --ink: #2b2a28;
+    --muted: #6f6a63;
+    --accent: #0f6b63;
+    --accent-soft: #e2efed;
+    --coral: #d0453a;
+    --coral-soft: #fbe9e7;
+    --line: #e6ded3;
+    --chip-gap: #e2935c;
+    --chip-misread: #7c5cbf;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: 16px; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.55;
+  }
+  .sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+
+  header.app-header {
+    background: var(--accent);
+    color: #fff;
+    padding: 1.1rem 1rem .9rem;
+    text-align: center;
+  }
+  header.app-header h1 {
+    margin: 0;
+    font-size: 1.45rem;
+    letter-spacing: .02em;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  }
+  header.app-header .tagline {
+    margin: .25rem 0 0;
+    font-size: .92rem;
+    color: #d6ece9;
+  }
+
+  .disclaimer-banner {
+    background: var(--coral-soft);
+    color: #7a271f;
+    border-bottom: 1px solid #efcdc8;
+    padding: .5rem 1rem;
+    font-size: .85rem;
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  }
+
+  nav.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    justify-content: center;
+    padding: .6rem .5rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  }
+  nav.tabs button {
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    padding: .45rem .9rem;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: .92rem;
+  }
+  nav.tabs button[aria-selected="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  nav.tabs button:hover { border-color: var(--accent); }
+
+  main { max-width: 780px; margin: 0 auto; padding: 1rem 1rem 2rem; }
+
+  section.view { display: none; }
+  section.view.active { display: block; }
+  section.view:not(#view-sheet) { max-width: 780px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.2rem;
+    margin-bottom: 1rem;
+  }
+  .card h2 { margin-top: 0; font-size: 1.15rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+  .hint { color: var(--muted); font-size: .9rem; }
+
+  label { display: block; font-weight: bold; margin: .8rem 0 .25rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; font-size: .92rem; }
+  label .req { color: var(--coral); }
+  input[type="text"], textarea {
+    width: 100%;
+    padding: .55rem .65rem;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    font: inherit;
+    background: #fffdf9;
+  }
+  textarea { min-height: 70px; resize: vertical; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  fieldset.category {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin: .8rem 0 0;
+    padding: .6rem .8rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  fieldset.category legend {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    font-weight: bold;
+    font-size: .92rem;
+    padding: 0 .35rem;
+  }
+  fieldset.category label.for-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-weight: normal;
+    margin: .2rem 0;
+    cursor: pointer;
+  }
+
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: .6rem 1.2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  }
+  button.primary:hover { background: #0b574f; }
+  button.secondary {
+    background: var(--surface);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 7px;
+    padding: .5rem 1rem;
+    cursor: pointer;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    font-size: .92rem;
+  }
+  button.secondary:hover { background: var(--accent-soft); }
+  button.danger {
+    background: transparent;
+    color: var(--coral);
+    border: 1px solid var(--coral);
+    border-radius: 7px;
+    padding: .35rem .7rem;
+    cursor: pointer;
+    font-size: .85rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  }
+  button.danger:hover { background: var(--coral-soft); }
+  button.link-like { background: none; border: none; color: var(--accent); cursor: pointer; text-decoration: underline; font: inherit; padding: 0; }
+
+  .form-row { display: flex; gap: .7rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
+  .form-error { color: var(--coral); font-size: .9rem; margin-top: .6rem; min-height: 1.2em; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+
+  .chip {
+    display: inline-block;
+    padding: .12rem .55rem;
+    border-radius: 999px;
+    color: #fff;
+    font-size: .78rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    white-space: nowrap;
+  }
+  .chip.knowledge-gap { background: var(--accent); }
+  .chip.rushed { background: var(--chip-gap); }
+  .chip.misread { background: var(--chip-misread); }
+
+  .entry-item {
+    border-top: 1px solid var(--line);
+    padding: .8rem 0;
+  }
+  .entry-item:first-child { border-top: none; }
+  .entry-head { display: flex; justify-content: space-between; gap: .6rem; align-items: baseline; flex-wrap: wrap; }
+  .entry-topic { font-weight: bold; }
+  .entry-date { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+  .entry-body { margin: .3rem 0 .2rem; font-size: .95rem; }
+  .entry-why { color: var(--muted); font-style: italic; margin-top: .15rem; }
+  .entry-actions { margin-top: .45rem; display: flex; gap: .5rem; }
+
+  .tally-row { margin: .55rem 0; }
+  .tally-label { display: flex; justify-content: space-between; font-size: .92rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+  .tally-bar-track { background: #f0e9df; border-radius: 5px; height: 12px; margin-top: .2rem; overflow: hidden; }
+  .tally-bar { height: 100%; border-radius: 5px; }
+  .tally-bar.knowledge-gap { background: var(--accent); }
+  .tally-bar.rushed { background: var(--chip-gap); }
+  .tally-bar.misread { background: var(--chip-misread); }
+
+  .top-clencher-callout {
+    border-left: 5px solid var(--coral);
+    background: var(--coral-soft);
+    padding: .7rem .9rem;
+    border-radius: 6px;
+    margin: .8rem 0;
+  }
+  .top-clencher-callout strong { font-size: 1.05rem; }
+
+  .week-nav { display: flex; align-items: center; justify-content: center; gap: .8rem; margin-bottom: .7rem; flex-wrap: wrap; }
+  .week-nav .week-label { font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+  .empty-note { color: var(--muted); font-style: italic; }
+
+  /* Study-focus sheet */
+  #view-sheet.active { display: block; }
+  .sheet {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.4rem;
+  }
+  .sheet h2, .sheet h3 { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+  .sheet ul { padding-left: 1.3rem; }
+  .sheet li { margin: .3rem 0; }
+  .sheet .disclaimer { margin-top: 1rem; }
+  .sheet .plan li { margin: .5rem 0; }
+
+  footer.app-footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: .85rem;
+    padding: 1rem;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  }
+
+  #toast {
+    position: fixed;
+    bottom: 1.2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: #fff;
+    padding: .55rem 1.1rem;
+    border-radius: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    font-size: .92rem;
+    z-index: 20;
+  }
+  #toast.show { opacity: 1; }
+  .toast-error { background: var(--coral) !important; }
+
+  .data-tools { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .8rem; }
+
+  @media print {
+    body { background: #fff; }
+    header.app-header, .disclaimer-banner, nav.tabs, footer.app-footer, #toast,
+    .no-print, .view-controls, .card:not(.printed) { display: none !important; }
+    main { max-width: none; padding: 0; margin: 0; }
+    section.view { display: none !important; }
+    section#view-sheet { display: block !important; }
+    .sheet { border: none; border-radius: 0; padding: 0; }
+    .no-print-inline { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>Wrong Answer Log</h1>
+  <p class="tagline">For nursing-practice mistakes &mdash; log it, name it, learn from it.</p>
+</header>
+
+<div class="disclaimer-banner" role="note">
+  <strong>Education only &mdash; not medical advice.</strong> This tool never gives clinical guidance; its content is not a substitute for your instructors, textbooks, or judgment.
+</div>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button type="button" role="tab" id="tab-log" aria-controls="view-log" aria-selected="true">New Entry</button>
+  <button type="button" role="tab" id="tab-history" aria-controls="view-history" aria-selected="false">History</button>
+  <button type="button" role="tab" id="tab-recap" aria-controls="view-recap" aria-selected="false">Weekly Recap</button>
+  <button type="button" role="tab" id="tab-sheet" aria-controls="view-sheet" aria-selected="false">Study-Focus Sheet</button>
+</nav>
+
+<main>
+
+  <!-- ============ VIEW: NEW ENTRY ============ -->
+  <section class="view card active" id="view-log" role="tabpanel" aria-labelledby="tab-log">
+    <h2>Log a wrong-answer moment</h2>
+    <p class="hint">The point isn't guilt &mdash; it's a pattern you can actually see. Just this one practice question. All data stays in this browser (localStorage).</p>
+    <form id="entry-form" novalidate>
+      <label for="f-topic">Study topic <span class="req">*</span></label>
+      <input type="text" id="f-topic" name="topic" maxlength="120" placeholder="e.g., Pre-eclampsia warning signs" autocomplete="off">
+
+      <label for="f-answer">The wrong answer you picked <span class="req">*</span></label>
+      <input type="text" id="f-answer" name="answer" maxlength="200" placeholder="e.g., Elevated heart rate as earliest sign" autocomplete="off">
+
+      <label for="f-why">Why I thought that <span class="req">*</span> <span class="hint">(one sentence)</span></label>
+      <textarea id="f-why" name="why" maxlength="240" placeholder="One honest sentence, e.g., &quot;I mixed up late signs with the priority-early ones.&quot;"></textarea>
+
+      <fieldset class="category">
+        <legend>Assigned category <span class="req">*</span></legend>
+        <label class="for-radio"><input type="radio" name="category" value="knowledge gap"> Knowledge gap</label>
+        <label class="for-radio"><input type="radio" name="category" value="rushed"> Rushed</label>
+        <label class="for-radio"><input type="radio" name="category" value="misread"> Misread</label>
+      </fieldset>
+
+      <div class="form-row">
+        <button type="submit" class="primary">Save entry</button>
+        <button type="button" class="secondary" id="btn-sample">Load sample data</button>
+      </div>
+      <p class="form-error" id="form-error" role="alert"></p>
+    </form>
+    <p class="hint" style="margin-top:1.2rem"><strong>Education only &mdash; not medical advice.</strong> Categories describe how you studied, not clinical correctness.</p>
+  </section>
+
+  <!-- ============ VIEW: HISTORY ============ -->
+  <section class="view card" id="view-history" role="tabpanel" aria-labelledby="tab-history">
+    <h2>History</h2>
+    <p class="hint">Every logged moment, newest first. <span id="history-count"></span></p>
+    <div id="history-list"></div>
+    <p class="hint" style="margin-top:1rem"><strong>Education only &mdash; not medical advice.</strong></p>
+    <div class="data-tools view-controls">
+      <button type="button" class="secondary" id="btn-export">Export backup (JSON)</button>
+      <button type="button" class="secondary" id="btn-import">Import backup (JSON)</button>
+      <input type="file" id="file-import" accept="application/json,.json" style="display:none" aria-hidden="true">
+    </div>
+  </section>
+
+  <!-- ============ VIEW: WEEKLY RECAP ============ -->
+  <section class="view card" id="view-recap" role="tabpanel" aria-labelledby="tab-recap">
+    <h2>Weekly recap &mdash; your &ldquo;top clencher&rdquo;</h2>
+    <p class="hint">The one category that clenched the most wrong answers this week. Weeks run Monday&ndash;Sunday.</p>
+    <div class="week-nav view-controls">
+      <button type="button" class="secondary" id="btn-prev-week">&larr; Previous week</button>
+      <span class="week-label" id="week-label"></span>
+      <button type="button" class="secondary" id="btn-next-week">Next week &rarr;</button>
+    </div>
+    <div id="recap-content"></div>
+    <p class="hint" style="margin-top:1rem"><strong>Education only &mdash; not medical advice.</strong> Patterns here describe study habits, never patient care.</p>
+  </section>
+
+  <!-- ============ VIEW: STUDY-FOCUS SHEET ============ -->
+  <section class="view" id="view-sheet" role="tabpanel" aria-labelledby="tab-sheet">
+    <div class="card view-controls no-print">
+      <h2>Printable study-focus sheet</h2>
+      <p class="hint">One page: your week's top clencher, the topics behind it, and a focus plan. Print it, stick it where you study.</p>
+      <div class="week-nav">
+        <button type="button" class="secondary" id="btn-prev-week-sheet">&larr; Previous week</button>
+        <span class="week-label" id="week-label-sheet"></span>
+        <button type="button" class="secondary" id="btn-next-week-sheet">Next week &rarr;</button>
+      </div>
+      <div class="form-row" style="margin-top:0">
+        <button type="button" class="primary" id="btn-print">Print sheet</button>
+      </div>
+    </div>
+    <div class="sheet" id="sheet-content"></div>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  <p><strong>Education only &mdash; not medical advice.</strong> All logs stay on this device (browser localStorage). Never logged online, never shared.</p>
+  <p>Wrong Answer Log &middot; an open-source education tool by Asdale Dynamics, LLC &middot; MIT License</p>
+</footer>
+
+<div id="toast" aria-live="polite"></div>
+
+<script>
+// ==== PURE LOGIC (tests) ====
+// This block contains no DOM code. tests/run-tests.js extracts and unit-tests it.
+'use strict';
+
+var CATEGORIES = ['knowledge gap', 'rushed', 'misread'];
+var CATEGORY_LABELS = {
+  'knowledge gap': 'Knowledge gap',
+  'rushed': 'Rushed',
+  'misread': 'Misread'
+};
+var WHY_MAX = 240;
+var TOPIC_MAX = 120;
+var ANSWER_MAX = 200;
+
+var STORAGE_KEY = 'wrong-answer-log-entries-v1';
+
+function normalizeCategory(value) {
+  if (typeof value !== 'string') { return null; }
+  var lower = value.trim().toLowerCase().replace(/[_-]+/g, ' ');
+  for (var i = 0; i < CATEGORIES.length; i++) {
+    if (lower === CATEGORIES[i]) { return CATEGORIES[i]; }
+  }
+  // Accept label forms like "Knowledge Gap", "MISREAD"
+  for (var j = 0; j < CATEGORIES.length; j++) {
+    if (lower === CATEGORY_LABELS[CATEGORIES[j]].toLowerCase()) { return CATEGORIES[j]; }
+  }
+  if (lower === 'gap') { return 'knowledge gap'; }
+  return null;
+}
+
+// Count entries by category. Unknown/missing categories are skipped.
+// Returns { 'knowledge gap': n, 'rushed': n, 'misread': n }
+function tallyCategories(entries) {
+  var tally = { 'knowledge gap': 0, 'rushed': 0, 'misread': 0 };
+  if (!Array.isArray(entries)) { return tally; }
+  for (var i = 0; i < entries.length; i++) {
+    var cat = normalizeCategory(entries[i] && entries[i].category);
+    if (cat !== null) { tally[cat] += 1; }
+  }
+  return tally;
+}
+
+// Winner = largest count; ties broken by CATEGORIES order (knowledge gap, rushed, misread).
+// Returns { category: string, count: number } or null when nothing counted.
+function topCategory(entries) {
+  var tally = tallyCategories(entries);
+  var best = null;
+  for (var i = 0; i < CATEGORIES.length; i++) {
+    var cat = CATEGORIES[i];
+    if (tally[cat] > 0 && (best === null || tally[cat] > best.count)) {
+      best = { category: cat, count: tally[cat] };
+    }
+  }
+  return best;
+}
+
+// ISO-8601 week key, e.g. "2026-W45". Weeks run Monday-Sunday.
+// Week 1 of an ISO year is the week containing that year's first Thursday.
+function weekKey(date) {
+  var d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  var dayNum = (d.getDay() + 6) % 7; // Monday = 0
+  d.setDate(d.getDate() - dayNum + 3); // Thursday of this week
+  var isoYear = d.getFullYear();
+  var firstThu = new Date(isoYear, 0, 4);
+  var ftDayNum = (firstThu.getDay() + 6) % 7;
+  firstThu.setDate(firstThu.getDate() - ftDayNum + 3);
+  var week = 1 + Math.round((d.getTime() - firstThu.getTime()) / (7 * 86400000));
+  return isoYear + '-W' + String(week).padStart(2, '0');
+}
+
+// The Monday (00:00 local) that starts the ISO week containing `date`.
+function startOfWeek(date) {
+  var d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  var dayNum = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - dayNum);
+  return d;
+}
+
+// Parse "2026-W45" into the Date of its Monday (00:00 local).
+function weekStartFromKey(key) {
+  var m = /^(\d{4})-W(\d{2})$/.exec(String(key || ''));
+  if (!m) { return null; }
+  var isoYear = parseInt(m[1], 10);
+  var week = parseInt(m[2], 10);
+  if (week < 1 || week > 53) { return null; }
+  var jan4 = new Date(isoYear, 0, 4);
+  var ftDayNum = (jan4.getDay() + 6) % 7;
+  var monday1 = new Date(jan4);
+  monday1.setDate(jan4.getDate() - ftDayNum);
+  var result = new Date(monday1);
+  result.setDate(monday1.getDate() + (week - 1) * 7);
+  if (weekKey(result) !== String(key)) { return null; }
+  return result;
+}
+
+function weekOffsetKey(key, offset) {
+  var start = weekStartFromKey(key);
+  if (start === null) { return null; }
+  start.setDate(start.getDate() + offset * 7);
+  return weekKey(start);
+}
+
+// Entries whose logged date's ISO week == targetKey. Oldest entries with no
+// valid date are skipped.
+function entriesInWeek(entries, targetKey) {
+  var out = [];
+  if (!Array.isArray(entries)) { return out; }
+  for (var i = 0; i < entries.length; i++) {
+    var e = entries[i];
+    var d = parseEntryDate(e);
+    if (d && weekKey(d) === targetKey) { out.push(e); }
+  }
+  return out;
+}
+
+// Accept ISO strings and epoch numbers; tolerate plain "YYYY-MM-DD" as local time.
+function parseEntryDate(entry) {
+  if (!entry) { return null; }
+  var raw = typeof entry.date === 'string' ? entry.date : entry.createdAt;
+  if (typeof raw === 'number' && isFinite(raw)) {
+    var d = new Date(raw);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof raw !== 'string' || raw === '') { return null; }
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (m) { return new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10)); }
+  var d2 = new Date(raw);
+  return isNaN(d2.getTime()) ? null : d2;
+}
+
+// Topics for one week's entries, sorted most-mentioned first; ties alphabetical.
+// Case-insensitive matching on trim/lowercase; display keeps first spelling seen.
+function tallyTopics(entries) {
+  var map = {};
+  var order = [];
+  if (Array.isArray(entries)) {
+    for (var i = 0; i < entries.length; i++) {
+      var topic = entries[i] && typeof entries[i].topic === 'string' ? entries[i].topic.trim() : '';
+      if (!topic) { continue; }
+      var key = topic.toLowerCase();
+      if (!map[key]) { map[key] = { topic: topic, count: 0 }; order.push(key); }
+      map[key].count += 1;
+    }
+  }
+  order.sort(function (a, b) {
+    if (map[b].count !== map[a].count) { return map[b].count - map[a].count; }
+    return a < b ? -1 : a > b ? 1 : 0;
+  });
+  return order.map(function (k) { return map[k]; });
+}
+
+function topTopics(entries, n) {
+  return tallyTopics(entries).slice(0, Math.max(0, n || 0));
+}
+
+// Validate/normalize one entry from untrusted input (form, or imported JSON).
+// Returns { ok: true, entry } or { ok: false, errors: [...] }.
+function validateEntry(raw) {
+  var errors = [];
+  if (!raw || typeof raw !== 'object') {
+    return { ok: false, errors: ['Entry must be an object.'] };
+  }
+  var topic = typeof raw.topic === 'string' ? raw.topic.trim() : '';
+  var answer = typeof raw.answer === 'string' ? raw.answer.trim() : '';
+  var why = typeof raw.why === 'string' ? raw.why.trim() : '';
+  var category = normalizeCategory(raw.category);
+
+  if (!topic) { errors.push('Study topic is required.'); }
+  else if (topic.length > TOPIC_MAX) { errors.push('Topic must be ' + TOPIC_MAX + ' characters or fewer.'); }
+  if (!answer) { errors.push('The wrong answer is required.'); }
+  else if (answer.length > ANSWER_MAX) { errors.push('Answer must be ' + ANSWER_MAX + ' characters or fewer.'); }
+  if (!why) { errors.push('Why I thought that is required.'); }
+  else if (why.length > WHY_MAX) { errors.push('Why must be ' + WHY_MAX + ' characters or fewer.'); }
+  if (!category) { errors.push('Assigned category must be knowledge gap, rushed, or misread.'); }
+
+  if (errors.length) { return { ok: false, errors: errors }; }
+
+  var d = parseEntryDate({ date: raw.date, createdAt: raw.createdAt }) || new Date();
+  return {
+    ok: true,
+    entry: {
+      id: typeof raw.id === 'string' && raw.id ? raw.id : makeId(),
+      topic: topic,
+      answer: answer,
+      why: why,
+      category: category,
+      date: typeof raw.date === 'string' && raw.date ? raw.date : d.toISOString(),
+      createdAt: typeof raw.createdAt === 'number' && isFinite(raw.createdAt) ? raw.createdAt : d.getTime()
+    }
+  };
+}
+
+function makeId() {
+  return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+var FOCUS_PLANS = {
+  'knowledge gap': [
+    'Pick up the textbook/notes for each topic below and re-read the core mechanism before touching more questions.',
+    'Say each idea back out loud in one plain sentence. If you stumble, that is the exact gap to close.'
+  ],
+  'rushed': [
+    'Before each practice question: read the question twice, cover the answers, state your predicted choice.',
+    'Cap yourself at a steady pace - speed returns after accuracy does.'
+  ],
+  'misread': [
+    'Before answering, underline the make-or-break words: first, highest priority, most likely, not, initially.',
+    'Reread what the question is actually asking, then choose - not the other way around.'
+  ]
+};
+// ==== END PURE LOGIC ====
+
+/* DOM APPLICATION (not unit-tested; offline file:// wiring) */
+(function () {
+  if (typeof document === 'undefined') { return; }
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---- storage ----
+  function loadEntries() {
+    try {
+      var raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) { return []; }
+      var parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) { return []; }
+      return parsed.filter(function (e) { return e && typeof e === 'object'; });
+    } catch (err) {
+      console.warn('Could not read saved entries:', err);
+      return [];
+    }
+  }
+
+  function saveEntries(entries) {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      return true;
+    } catch (err) {
+      console.warn('Could not save entries:', err);
+      showToast('Could not save in this browser (storage blocked).', true);
+      return false;
+    }
+  }
+
+  var entries = loadEntries();
+
+  // ---- toast ----
+  var toastTimer = null;
+  function showToast(message, isError) {
+    var t = $('toast');
+    t.textContent = message;
+    t.classList.toggle('toast-error', !!isError);
+    t.classList.add('show');
+    if (toastTimer) { clearTimeout(toastTimer); }
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
+  }
+
+  // ---- tabs ----
+  var tabs = [
+    { tab: 'tab-log', view: 'view-log' },
+    { tab: 'tab-history', view: 'view-history' },
+    { tab: 'tab-recap', view: 'view-recap' },
+    { tab: 'tab-sheet', view: 'view-sheet' }
+  ];
+  function showView(viewId) {
+    tabs.forEach(function (t) {
+      var on = t.view === viewId;
+      $(t.tab).setAttribute('aria-selected', on ? 'true' : 'false');
+      $(t.view).classList.toggle('active', on);
+    });
+    render();
+  }
+  tabs.forEach(function (t) {
+    $(t.tab).addEventListener('click', function () { showView(t.view); });
+  });
+
+  // ---- helpers ----
+  function esc(text) {
+    return String(text)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function fmtDate(entry) {
+    var d = parseEntryDate(entry);
+    if (!d) { return 'undated'; }
+    return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function fmtWeekRange(key) {
+    var start = weekStartFromKey(key);
+    if (!start) { return key; }
+    var end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    var opts = { month: 'short', day: 'numeric', year: 'numeric' };
+    return start.toLocaleDateString(undefined, opts) + ' \u2013 ' + end.toLocaleDateString(undefined, opts);
+  }
+  function chip(cat) {
+    return '<span class="chip ' + esc(cat.replace(/ /g, '-')) + '">' + esc(CATEGORY_LABELS[cat] || cat) + '</span>';
+  }
+
+  // ---- state for week views ----
+  var recapWeekKey = weekKey(new Date());
+  var sheetWeekKey = recapWeekKey;
+
+  // ---- form ----
+  $('entry-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var form = ev.target;
+    var formElements = form.elements;
+    var category = '';
+    for (var i = 0; i < formElements.category.length; i++) {
+      if (formElements.category[i].checked) { category = formElements.category[i].value; }
+    }
+    var result = validateEntry({
+      topic: formElements.topic.value,
+      answer: formElements.answer.value,
+      why: formElements.why.value,
+      category: category
+    });
+    var errEl = $('form-error');
+    if (!result.ok) {
+      errEl.textContent = result.errors.join(' ');
+      return;
+    }
+    errEl.textContent = '';
+    entries.push(result.entry);
+    if (saveEntries(entries)) {
+      form.reset();
+      showToast('Saved. That one is logged - on to the next.');
+      showView('view-log');
+    }
+  });
+
+  $('btn-sample').addEventListener('click', function () {
+    if (entries.length > 0 && !window.confirm('This adds fictional sample entries to your log. OK to add them?')) {
+      return;
+    }
+    var now = new Date();
+    function daysAgo(n) {
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - n, 12);
+      return d.toISOString();
+    }
+    var sample = [
+      { topic: 'Pre-eclampsia warning signs', answer: 'Elevated heart rate', why: 'I mixed up early warning signs with later, more serious ones.', category: 'knowledge gap', date: daysAgo(0) },
+      { topic: 'Pediatric dosing', answer: 'Adult dose halved', why: 'I answered before finishing the mg/kg math in my head.', category: 'rushed', date: daysAgo(0) },
+      { topic: 'Newborn reflexes', answer: 'Babinski at 8 months', why: 'I skimmed the age range and read "months" instead of "years".', category: 'misread', date: daysAgo(1) },
+      { topic: 'Insulin types', answer: 'Regular insulin at bedtime', why: 'I had NPH and Regular timing tables swapped.', category: 'knowledge gap', date: daysAgo(2) },
+      { topic: 'DVT positioning', answer: 'Elevate and massage the leg', why: 'I skimmed past the word "NOT" in the question stem.', category: 'misread', date: daysAgo(3) },
+      { topic: 'Priority patient', answer: 'The post-op day 2 patient', why: 'I ranked by how vivid the details felt, not detectable change.', category: 'rushed', date: daysAgo(4) }
+    ].map(function (s) {
+      var v = validateEntry(s);
+      return v.ok ? v.entry : null;
+    }).filter(Boolean);
+    entries = entries.concat(sample);
+    saveEntries(entries);
+    showToast('Sample data added (' + sample.length + ' fictional entries).');
+    render();
+  });
+
+  // ---- history ----
+  function renderHistory() {
+    var list = $('history-list');
+    $('history-count').textContent = entries.length > 0 ? entries.length + ' logged.' : '';
+    if (entries.length === 0) {
+      list.innerHTML = '<p class="empty-note">Nothing logged yet. Use &ldquo;New Entry&rdquo; - or load the sample data there to see how it works.</p>';
+      return;
+    }
+    var sorted = entries.slice().sort(function (a, b) { return b.createdAt - a.createdAt; });
+    list.innerHTML = sorted.map(function (e) {
+      return '<div class="entry-item">'
+        + '<div class="entry-head">'
+        + '<span class="entry-topic">' + esc(e.topic) + '&nbsp;' + chip(e.category) + '</span>'
+        + '<span class="entry-date">' + esc(fmtDate(e)) + '</span>'
+        + '</div>'
+        + '<div class="entry-body">Picked: <strong>' + esc(e.answer) + '</strong></div>'
+        + '<div class="entry-why">&ldquo;' + esc(e.why) + '&rdquo;</div>'
+        + '<div class="entry-actions">'
+        + '<button type="button" class="danger" data-delete="' + esc(e.id) + '">Delete</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+    list.querySelectorAll('button[data-delete]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (window.confirm('Delete this logged moment? This cannot be undone.')) {
+          entries = entries.filter(function (e) { return e.id !== btn.getAttribute('data-delete'); });
+          saveEntries(entries);
+          render();
+          showToast('Entry deleted.');
+        }
+      });
+    });
+  }
+
+  // ---- weekly recap ----
+  function setWeek(delta, which) {
+    if (which === 'sheet') {
+      sheetWeekKey = weekOffsetKey(sheetWeekKey, delta) || sheetWeekKey;
+      renderSheet();
+    } else {
+      recapWeekKey = weekOffsetKey(recapWeekKey, delta) || recapWeekKey;
+      renderRecap();
+    }
+  }
+  $('btn-prev-week').addEventListener('click', function () { setWeek(-1, 'recap'); });
+  $('btn-next-week').addEventListener('click', function () { setWeek(1, 'recap'); });
+  $('btn-prev-week-sheet').addEventListener('click', function () { setWeek(-1, 'sheet'); });
+  $('btn-next-week-sheet').addEventListener('click', function () { setWeek(1, 'sheet'); });
+
+  function recapHTML(weekKeyStr) {
+    var weekEntries = entriesInWeek(entries, weekKeyStr);
+    var tally = tallyCategories(weekEntries);
+    var top = topCategory(weekEntries);
+    var total = weekEntries.length;
+    var html = '<p class="week-label">' + esc(fmtWeekRange(weekKeyStr)) + ' &middot; ' + total + ' logged</p>';
+    if (total === 0) {
+      return html + '<p class="empty-note">No entries logged this week. A clean slate is still progress.</p>';
+    }
+    html += CATEGORIES.map(function (cat) {
+      var width = Math.round((tally[cat] / total) * 100);
+      return '<div class="tally-row">'
+        + '<div class="tally-label"><span>' + esc(CATEGORY_LABELS[cat]) + '</span><span>' + tally[cat] + '</span></div>'
+        + '<div class="tally-bar-track"><div class="tally-bar ' + cat.replace(/ /g, '-') + '" style="width:' + width + '%"></div></div>'
+        + '</div>';
+    }).join('');
+    html += '<div class="top-clencher-callout">This week\'s <strong>top clencher</strong>: '
+      + chip(top.category) + ' <strong>' + top.count + '</strong> of ' + total + ' wrong answers. '
+      + '<em>' + esc(FOCUS_PLANS[top.category][0]) + '</em>'
+      + '</div>';
+    var topics = topTopics(weekEntries, 3);
+    if (topics.length > 0) {
+      html += '<p><strong>Topics to revisit:</strong> '
+        + topics.map(function (t) { return esc(t.topic) + ' (' + t.count + ')'; }).join(' &middot; ')
+        + '</p>';
+    }
+    return html;
+  }
+
+  function renderRecap() {
+    $('week-label').textContent = fmtWeekRange(recapWeekKey);
+    $('recap-content').innerHTML = recapHTML(recapWeekKey);
+  }
+
+  // ---- study-focus sheet ----
+  function sheetHTML(weekKeyStr) {
+    var weekEntries = entriesInWeek(entries, weekKeyStr);
+    var tally = tallyCategories(weekEntries);
+    var top = topCategory(weekEntries);
+    var plans = top ? FOCUS_PLANS[top.category] : FOCUS_PLANS['knowledge gap'];
+    var topics = topTopics(weekEntries, 5);
+    var html = '<h2>Study-Focus Sheet</h2>'
+      + '<p>Week: <strong>' + esc(fmtWeekRange(weekKeyStr)) + '</strong></p>';
+    if (weekEntries.length === 0) {
+      html += '<p class="empty-note">No entries logged this week, so there is nothing to focus on yet. '
+        + 'Log a few practice-question misses first, then come back and print this sheet.</p>';
+    } else if (top) {
+      var perCat = CATEGORIES.map(function (c) {
+        return CATEGORY_LABELS[c] + ': ' + tally[c];
+      }).join(' | ');
+      html += '<h3>Top clencher this week: ' + esc(CATEGORY_LABELS[top.category]) + ' (' + top.count + ' of ' + weekEntries.length + ')</h3>'
+        + '<p class="hint" style="margin-top:0">' + esc(perCat) + '</p>'
+        + '<h3>Focus plan</h3>'
+        + '<ul class="plan">' + plans.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>'
+        + '<h3>Topics to revisit first</h3>';
+      if (topics.length) {
+        html += '<ul>' + topics.map(function (t) {
+          return '<li><strong>' + esc(t.topic) + '</strong> (' + t.count + ' miss' + (t.count > 1 ? 'es' : '') + ')</li>';
+        }).join('') + '</ul>';
+      } else {
+        html += '<p class="empty-note">(No topic text was recorded this week.)</p>';
+      }
+    }
+    html += '<p class="disclaimer hint"><strong>Education only - not medical advice.</strong> '
+      + 'This sheet describes study habits. It is not clinical guidance, and never overrides your instructors or textbooks.</p>'
+      + '<p class="hint">Generated by the Wrong Answer Log (Asdale Dynamics, LLC). Weeks run Monday-Sunday.</p>';
+    return html;
+  }
+
+  function renderSheet() {
+    $('week-label-sheet').textContent = fmtWeekRange(sheetWeekKey);
+    $('sheet-content').innerHTML = sheetHTML(sheetWeekKey);
+  }
+
+  $('btn-print').addEventListener('click', function () {
+    renderSheet();
+    window.print();
+  });
+
+  // ---- export / import ----
+  function exportJson() {
+    if (entries.length === 0) {
+      showToast('Nothing to export yet.', true);
+      return;
+    }
+    try {
+      var blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'wrong-answer-log-' + weekKey(new Date()) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Exported a JSON backup (check downloads).');
+    } catch (err) {
+      showToast('Export failed in this browser.', true);
+    }
+  }
+
+  function importJson(file) {
+    var reader = new window.FileReader();
+    reader.onload = function () {
+      var result = importEntriesText(String(reader.result));
+      if (result.ok) {
+        entries = result.entries;
+        saveEntries(entries);
+        render();
+        showToast('Imported ' + result.count + ' entries.');
+      } else {
+        showToast('Import failed: ' + result.errors.join(' '), true);
+      }
+    };
+    reader.onerror = function () { showToast('Could not read that file.', true); };
+    reader.readAsText(file);
+  }
+
+  function importEntriesText(text) {
+    var parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (err) {
+      return { ok: false, errors: ['file is not valid JSON'], count: 0, entries: [] };
+    }
+    if (!Array.isArray(parsed)) {
+      return { ok: false, errors: ['expected a list of entries'], count: 0, entries: [] };
+    }
+    var cleaned = [];
+    var bad = 0;
+    parsed.forEach(function (raw) {
+      var v = validateEntry(raw);
+      if (v.ok) { cleaned.push(v.entry); } else { bad++; }
+    });
+    if (cleaned.length === 0) {
+      return { ok: false, errors: ['no valid entries found'], count: 0, entries: [] };
+    }
+    return { ok: true, errors: bad > 0 ? [bad + ' skipped as invalid'] : [], count: cleaned.length, entries: cleaned };
+  }
+
+  // Expose import helper for potential reuse/tests
+  window.wrongAnswerLog = {
+    importEntriesText: importEntriesText
+  };
+
+  $('btn-export').addEventListener('click', exportJson);
+  $('btn-import').addEventListener('click', function () { $('file-import').click(); });
+  $('file-import').addEventListener('change', function (ev) {
+    if (ev.target.files && ev.target.files[0]) {
+      if (entries.length > 0 && !window.confirm('Importing replaces your current log with the file contents. Continue?')) {
+        ev.target.value = '';
+        return;
+      }
+      importJson(ev.target.files[0]);
+      ev.target.value = '';
+    }
+  });
+
+  // ---- render all ----
+  function render() {
+    renderHistory();
+    renderRecap();
+    renderSheet();
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
